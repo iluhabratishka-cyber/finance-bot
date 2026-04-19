@@ -90,17 +90,31 @@ async def voice(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
 
 async def today(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     conn = sqlite3.connect("finance.db")
-    расходы = conn.execute("SELECT SUM(amount) FROM transactions WHERE type='расход' AND date=date('now')").fetchone()[0] or 0
-    rows = conn.execute("SELECT amount, category FROM transactions WHERE type='расход' AND date=date('now')").fetchall()
+    расходы_сумма = conn.execute("SELECT SUM(amount) FROM transactions WHERE type='расход' AND date=date('now')").fetchone()[0] or 0
+    доходы_сумма = conn.execute("SELECT SUM(amount) FROM transactions WHERE type='доход' AND date=date('now')").fetchone()[0] or 0
+    расходы_rows = conn.execute("SELECT amount, category FROM transactions WHERE type='расход' AND date=date('now')").fetchall()
+    доходы_rows = conn.execute("SELECT amount, category FROM transactions WHERE type='доход' AND date=date('now')").fetchall()
     conn.close()
-    
-    if not rows:
-        await update.message.reply_text("📭 Сегодня расходов нет!")
+
+    if not расходы_rows and not доходы_rows:
+        await update.message.reply_text("📭 Сегодня записей нет!")
         return
-    
-    detail = "\n".join([f"  • {r[1]} — {r[0]:.0f} сом" for r in rows])
-    await update.message.reply_text(
-        f"📅 Расходы за сегодня:\n\n{detail}\n\n💸 Итого: {расходы:.0f} сом")
+
+    msg = "📅 Сегодня:\n"
+
+    if доходы_rows:
+        msg += "\n💚 Доходы:\n"
+        msg += "\n".join([f"  • {r[1]} — {r[0]:.0f} сом" for r in доходы_rows])
+        msg += f"\n  Итого: {доходы_сумма:.0f} сом\n"
+
+    if расходы_rows:
+        msg += "\n🔴 Расходы:\n"
+        msg += "\n".join([f"  • {r[1]} — {r[0]:.0f} сом" for r in расходы_rows])
+        msg += f"\n  Итого: {расходы_сумма:.0f} сом\n"
+
+    msg += f"\n💰 Баланс: {доходы_сумма - расходы_сумма:.0f} сом"
+
+    await update.message.reply_text(msg)
 # --- Запуск ---
 logging.basicConfig(level=logging.INFO)
 init_db()
