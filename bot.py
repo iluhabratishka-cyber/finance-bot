@@ -8,7 +8,7 @@ GROQ_KEY = os.environ.get("GROQ_KEY")
 
 # --- База данных ---
 def init_db():
-    conn = sqlite3.connect("/app/data//app/data/finance.db")
+    conn = sqlite3.connect("/app/data/finance.db")
     conn.execute("""CREATE TABLE IF NOT EXISTS transactions (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         type TEXT, amount REAL, category TEXT, date TEXT DEFAULT (date('now', '+6 hours')))""")
