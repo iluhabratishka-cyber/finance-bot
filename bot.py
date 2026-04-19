@@ -69,8 +69,6 @@ async def voice(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
                 model="whisper-large-v3", file=f, language="ru"
             ).text.lower()
 
-        await update.message.reply_text(f"🎤 Услышал: {text}")
-
         numbers = re.findall(r'\d+', text)
         if not numbers:
             await update.message.reply_text("❌ Не нашёл сумму. Скажи например: кофе 300 сом")
@@ -79,8 +77,13 @@ async def voice(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
         amount = float(numbers[0])
         category = re.sub(r'\d+', '', text).replace('сом', '').strip() or "прочее"
 
-        add_transaction("расход", amount, category)
-        await update.message.reply_text(f"✅ Записал расход: {amount:.0f} сом — {category}")
+        # Определяем тип — доход или расход
+        income_words = ['доход', 'зарплата', 'получил', 'заработал', 'пришло', 'перевод', 'фриланс']
+        type_ = "доход" if any(w in text for w in income_words) else "расход"
+        emoji = "💚" if type_ == "доход" else "🔴"
+
+        add_transaction(type_, amount, category)
+        await update.message.reply_text(f"✅ Записал {type_}: {emoji} {amount:.0f} сом — {category}")
 
     except Exception as e:
         await update.message.reply_text(f"❌ Ошибка: {e}")
