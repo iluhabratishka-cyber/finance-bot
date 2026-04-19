@@ -115,6 +115,21 @@ async def today(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     msg += f"\n💰 Баланс: {доходы_сумма - расходы_сумма:.0f} сом"
 
     await update.message.reply_text(msg)
+    async def text_input(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
+    try:
+        text = update.message.text.lower()
+        numbers = re.findall(r'\d+', text)
+        if not numbers:
+            return
+        amount = float(numbers[0])
+        category = re.sub(r'\d+', '', text).replace('сом', '').strip() or "прочее"
+        income_words = ['доход', 'зарплата', 'получил', 'заработал', 'пришло', 'перевод', 'фриланс']
+        type_ = "доход" if any(w in text for w in income_words) else "расход"
+        emoji = "💚" if type_ == "доход" else "🔴"
+        add_transaction(type_, amount, category)
+        await update.message.reply_text(f"✅ Записал {type_}: {emoji} {amount:.0f} сом — {category}")
+    except Exception as e:
+        await update.message.reply_text(f"❌ Ошибка: {e}")
 # --- Запуск ---
 logging.basicConfig(level=logging.INFO)
 init_db()
@@ -124,6 +139,7 @@ app.add_handler(CommandHandler("income", доход))
 app.add_handler(CommandHandler("expense", расход))
 app.add_handler(CommandHandler("stats", статистика))
 app.add_handler(MessageHandler(filters.VOICE, voice))
+app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, text_input))
 app.add_handler(CommandHandler("today", today))
 print("Бот запущен!")
 app.run_polling()
