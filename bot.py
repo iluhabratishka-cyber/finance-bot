@@ -85,6 +85,19 @@ async def voice(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     except Exception as e:
         await update.message.reply_text(f"❌ Ошибка: {e}")
 
+async def today(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
+    conn = sqlite3.connect("finance.db")
+    расходы = conn.execute("SELECT SUM(amount) FROM transactions WHERE type='расход' AND date=date('now')").fetchone()[0] or 0
+    rows = conn.execute("SELECT amount, category FROM transactions WHERE type='расход' AND date=date('now')").fetchall()
+    conn.close()
+    
+    if not rows:
+        await update.message.reply_text("📭 Сегодня расходов нет!")
+        return
+    
+    detail = "\n".join([f"  • {r[1]} — {r[0]:.0f} сом" for r in rows])
+    await update.message.reply_text(
+        f"📅 Расходы за сегодня:\n\n{detail}\n\n💸 Итого: {расходы:.0f} сом")
 # --- Запуск ---
 logging.basicConfig(level=logging.INFO)
 init_db()
@@ -94,5 +107,6 @@ app.add_handler(CommandHandler("income", доход))
 app.add_handler(CommandHandler("expense", расход))
 app.add_handler(CommandHandler("stats", статистика))
 app.add_handler(MessageHandler(filters.VOICE, voice))
+app.add_handler(CommandHandler("today", today))
 print("Бот запущен!")
 app.run_polling()
