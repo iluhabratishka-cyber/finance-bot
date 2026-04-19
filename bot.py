@@ -110,7 +110,7 @@ async def voice(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
         if type_ is None:
             await update.message.reply_text("❌ Не нашёл сумму. Скажи например: кофе 300 сом")
             return
-        emoji = "💚" if type_ == "доход" else "🔴"
+        emoji = "📊" if type_ == "доход" else "🔴"
         await update.message.reply_text(f"✅ Записал {type_}: {emoji} {amount:.0f} сом — {category}")
     except Exception as e:
         await update.message.reply_text(f"❌ Ошибка: {e}")
