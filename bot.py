@@ -8,14 +8,14 @@ GROQ_KEY = os.environ.get("GROQ_KEY")
 
 # --- База данных ---
 def init_db():
-    conn = sqlite3.connect("finance.db")
+    conn = sqlite3.connect("/app/data//app/data/finance.db")
     conn.execute("""CREATE TABLE IF NOT EXISTS transactions (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
-        type TEXT, amount REAL, category TEXT, date TEXT DEFAULT (date('now')))""")
+        type TEXT, amount REAL, category TEXT, date TEXT DEFAULT (date('now', '+6 hours')))""")
     conn.commit(); conn.close()
 
 def add_transaction(type_, amount, category):
-    conn = sqlite3.connect("finance.db")
+    conn = sqlite3.connect("/app/data/finance.db")
     conn.execute("INSERT INTO transactions (type, amount, category) VALUES (?,?,?)", (type_, amount, category))
     conn.commit(); conn.close()
 
@@ -47,7 +47,7 @@ async def расход(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text("❌ Формат: /expense 300 кофе")
 
 async def статистика(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
-    conn = sqlite3.connect("finance.db")
+    conn = sqlite3.connect("/app/data/finance.db")
     доходы = conn.execute("SELECT SUM(amount) FROM transactions WHERE type='доход' AND strftime('%Y-%m', date)=strftime('%Y-%m','now')").fetchone()[0] or 0
     расходы = conn.execute("SELECT SUM(amount) FROM transactions WHERE type='расход' AND strftime('%Y-%m', date)=strftime('%Y-%m','now')").fetchone()[0] or 0
     conn.close()
@@ -89,7 +89,7 @@ async def voice(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text(f"❌ Ошибка: {e}")
 
 async def today(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
-    conn = sqlite3.connect("finance.db")
+    conn = sqlite3.connect("/app/data/finance.db")
     расходы_сумма = conn.execute("SELECT SUM(amount) FROM transactions WHERE type='расход' AND date=date('now')").fetchone()[0] or 0
     доходы_сумма = conn.execute("SELECT SUM(amount) FROM transactions WHERE type='доход' AND date=date('now')").fetchone()[0] or 0
     расходы_rows = conn.execute("SELECT amount, category FROM transactions WHERE type='расход' AND date=date('now')").fetchall()
