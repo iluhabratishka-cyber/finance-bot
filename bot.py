@@ -20,11 +20,15 @@ def add_transaction(type_, amount, category):
     conn.commit(); conn.close()
 
 def parse_and_save(text):
+    # Конвертируем "тысяч/тысячи/тыс" и "миллион/млн"
+    text = re.sub(r'(\d+)\s*(тысяч|тысячи|тыщ|тыс)\b', lambda m: str(int(m.group(1)) * 1000), text)
+    text = re.sub(r'(\d+)\s*(миллион|миллиона|млн)\b', lambda m: str(int(m.group(1)) * 1000000), text)
+
     numbers = re.findall(r'\d+', text)
     if not numbers:
         return None, None, None
     amount = float(numbers[0])
-    category = re.sub(r'\d+', '', text).replace('сом', '').strip() or "прочее"
+    category = re.sub(r'\d+', '', text).replace('сом', '').replace('тысяч', '').replace('тыс', '').replace('миллион', '').replace('млн', '').strip() or "прочее"
     income_words = ['доход', 'зарплата', 'получил', 'заработал', 'пришло', 'перевод', 'фриланс']
     type_ = "доход" if any(w in text for w in income_words) else "расход"
     add_transaction(type_, amount, category)
