@@ -64,7 +64,7 @@ async def статистика(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     д = conn.execute("SELECT SUM(amount) FROM transactions WHERE type='доход' AND strftime('%Y-%m', date)=strftime('%Y-%m', date('now', '+6 hours'))").fetchone()[0] or 0
     р = conn.execute("SELECT SUM(amount) FROM transactions WHERE type='расход' AND strftime('%Y-%m', date)=strftime('%Y-%m', date('now', '+6 hours'))").fetchone()[0] or 0
     conn.close()
-    await update.message.reply_text(f"📊 Статистика за месяц:\n\n💚 Доходы:  {д:.0f} сом\n🔴 Расходы: {р:.0f} сом\n💰 Баланс:  {д-р:.0f} сом")
+    await update.message.reply_text(f"📊 Статистика за месяц:\n\n📊 Доходы:  {д:.0f} сом\n🔴 Расходы: {р:.0f} сом\n💰 Баланс:  {д-р:.0f} сом")
 
 async def today(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     conn = sqlite3.connect(DB)
@@ -79,7 +79,7 @@ async def today(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
         return
     msg = "📅 Сегодня:\n"
     if д_rows:
-        msg += "\n💚 Доходы:\n" + "\n".join([f"  • {r[1]} — {r[0]:.0f} сом" for r in д_rows])
+        msg += "\n📊 Доходы:\n" + "\n".join([f"  • {r[1]} — {r[0]:.0f} сом" for r in д_rows])
         msg += f"\n  Итого: {д_сумма:.0f} сом\n"
     if р_rows:
         msg += "\n🔴 Расходы:\n" + "\n".join([f"  • {r[1]} — {r[0]:.0f} сом" for r in р_rows])
@@ -92,7 +92,7 @@ async def text_input(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     type_, amount, category = parse_and_save(text)
     if type_ is None:
         return
-    emoji = "💚" if type_ == "доход" else "🔴"
+    emoji = "📊" if type_ == "доход" else "🔴"
     await update.message.reply_text(f"✅ Записал {type_}: {emoji} {amount:.0f} сом — {category}")
 
 async def voice(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
