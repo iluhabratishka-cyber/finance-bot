@@ -118,10 +118,15 @@ async def voice(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text(f"✅ Записал {type_}: {emoji} {amount:.0f} сом — {category}")
     except Exception as e:
         await update.message.reply_text(f"❌ Ошибка: {e}")
-
+async def reset(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
+    conn = sqlite3.connect(DB)
+    conn.execute("DELETE FROM transactions")
+    conn.commit(); conn.close()
+    await update.message.reply_text("🗑️ Все записи удалены! Начинаем с нуля.")
 logging.basicConfig(level=logging.INFO)
 init_db()
 app = ApplicationBuilder().token(BOT_TOKEN).build()
+app.add_handler(CommandHandler("reset", reset))
 app.add_handler(CommandHandler("start", start))
 app.add_handler(CommandHandler("income", доход))
 app.add_handler(CommandHandler("expense", расход))
