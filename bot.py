@@ -7,6 +7,8 @@ BOT_TOKEN = os.environ.get("BOT_TOKEN")
 GROQ_KEY = os.environ.get("GROQ_KEY")
 DB = "/app/data/finance.db"
 
+MY_ID = 1359837942  # замени на свой Telegram ID
+
 KEYBOARD = ReplyKeyboardMarkup(
     [
         ["📅 Сегодня", "📊 Статистика"],
@@ -14,6 +16,12 @@ KEYBOARD = ReplyKeyboardMarkup(
     ],
     resize_keyboard=True
 )
+
+async def check_user(update: Update) -> bool:
+    if update.effective_user.id != MY_ID:
+        await update.message.reply_text("⛔ Нет доступа.")
+        return False
+    return True
 
 def init_db():
     conn = sqlite3.connect(DB)
@@ -41,6 +49,7 @@ def parse_and_save(text):
     return type_, amount, category
 
 async def start(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
+    if not await check_user(update): return
     await update.message.reply_text(
         "👋 Привет! Я веду твои финансы.\n\n"
         "Просто напиши:\n"
@@ -50,6 +59,7 @@ async def start(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
         reply_markup=KEYBOARD)
 
 async def show_today(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
+    if not await check_user(update): return
     conn = sqlite3.connect(DB)
     today_date = "date('now', '+6 hours')"
     д_сумма = conn.execute(f"SELECT SUM(amount) FROM transactions WHERE type='доход' AND date={today_date}").fetchone()[0] or 0
@@ -71,6 +81,7 @@ async def show_today(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(msg, reply_markup=KEYBOARD)
 
 async def show_stats(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
+    if not await check_user(update): return
     conn = sqlite3.connect(DB)
     д = conn.execute("SELECT SUM(amount) FROM transactions WHERE type='доход' AND strftime('%Y-%m', date)=strftime('%Y-%m', date('now', '+6 hours'))").fetchone()[0] or 0
     р = conn.execute("SELECT SUM(amount) FROM transactions WHERE type='расход' AND strftime('%Y-%m', date)=strftime('%Y-%m', date('now', '+6 hours'))").fetchone()[0] or 0
@@ -80,12 +91,14 @@ async def show_stats(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
         reply_markup=KEYBOARD)
 
 async def reset(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
+    if not await check_user(update): return
     conn = sqlite3.connect(DB)
     conn.execute("DELETE FROM transactions")
     conn.commit(); conn.close()
     await update.message.reply_text("🗑️ Все записи удалены! Начинаем с нуля.", reply_markup=KEYBOARD)
 
 async def help_cmd(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
+    if not await check_user(update): return
     await update.message.reply_text(
         "❓ Как пользоваться:\n\n"
         "Просто напиши текстом:\n"
@@ -100,6 +113,7 @@ async def help_cmd(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
         reply_markup=KEYBOARD)
 
 async def text_input(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
+    if not await check_user(update): return
     text = update.message.text.lower()
 
     if "сегодня" in text:
@@ -120,6 +134,7 @@ async def text_input(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
         reply_markup=KEYBOARD)
 
 async def voice(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
+    if not await check_user(update): return
     try:
         file = await ctx.bot.get_file(update.message.voice.file_id)
         path = "/tmp/voice.ogg"
